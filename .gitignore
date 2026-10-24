@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 data/raw/**/*.zip
 data/raw/**/*.tar.gz
+data/raw/mdvr_kcl/26-29_09_2017_KCL/
