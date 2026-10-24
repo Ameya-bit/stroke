@@ -4,11 +4,11 @@
 id, birth year and sex: VA1 ACNAGRER 49 F 21032017 0920 (49 -> born 1949). Tasks used here:
   VA = sustained /a/ (2 takes), B = read balanced text (2 takes),
   D1/D2 = 'pa' / 'ta' syllable repetition for 5 s (diadochokinesis).
-Folder names contain participant names, so this set is never committed.
+Folder names contain participant names and filenames carry birth year and
+initials-like codes, so neither the audio nor the filenames are ever committed.
 """
 from __future__ import annotations
 
-import hashlib
 import re
 import sys
 from pathlib import Path
@@ -65,16 +65,20 @@ def collect() -> pd.DataFrame:
         task = TASKS.get(code)
         if task is None:
             continue
-        sid = hashlib.sha1(sid.encode()).hexdigest()[:8]
         snd = parselmouth.Sound(str(wav)).convert_to_mono()
         inten = snd.to_intensity(minimum_pitch=PITCH_FLOOR_HZ).values[0]
         row = {"task": task, "take": int(take), "speaker": sid,
                "noise_floor_db": float(np.percentile(inten, 5)), "peak_abs": float(np.abs(snd.values).max()), "group": group,
-               "age": age, "sex": sex, "file": wav.name, **extract_features(wav)}
+               "age": age, "sex": sex, **extract_features(wav)}
         if task == "ddk":
             row.update(ddk_features(wav))
         rows.append(row)
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    # Replace filename-derived speaker codes with sequential ids so the committed
+    # CSV carries no quasi-identifiers (codes, birth year + date). Filenames are
+    # deliberately not stored for the same reason.
+    ids = {sid: f"S{i:02d}" for i, sid in enumerate(sorted(df.speaker.unique()), 1)}
+    return df.assign(speaker=df.speaker.map(ids))
 
 
 def logo_auc(X: np.ndarray, y: np.ndarray, groups: np.ndarray) -> tuple[float, float]:
