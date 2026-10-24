@@ -1,0 +1,5 @@
+LICENSE CC BY 4.0
+DESC <p>The Dempgraphics file contains: Sample ID, participant age, sex and label - HC (Healthy Control) or PwPD (Patient with Parkinson's Disease).  The Sample ID is a key that links to the voice recording files PD_AH.zip and HC_AH.zip.</p><p>Voice recordings are in .wav format and represent a prolonged enunciation of the vowel /a/.  These recordings were made using participant's telephones.</p>
+Demographics_age_sex.xlsx 119 KB https://ndownloader.figshare.com/files/41836707
+PD_AH.zip 2194 KB https://ndownloader.figshare.com/files/41836710
+HC_AH.zip 1960 KB https://ndownloader.figshare.com/files/41836713
