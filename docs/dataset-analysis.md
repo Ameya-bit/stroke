@@ -94,3 +94,40 @@ threshold needs (how many SDs from baseline before flagging).
    "experimental" internally.
 6. Italian PVS (needs IEEE login) would add vowels + syllables + read text from
    ~50 speakers at 16 kHz. Worth 10 minutes of someone's time to download.
+
+## 5. Italian Parkinson's Voice and Speech, 28 PD / 22 elderly HC / 15 young HC, 16 kHz
+
+The only set with **age-matched controls** (PD mean 66.7, elderly HC 67.1) and
+with vowel, read text and pa/ta syllable repetition from the same speakers.
+Young controls (age 23) only recorded read text and are ignored.
+Speaker-held-out logistic regression, PD vs elderly HC:
+
+| Task | Recordings | AUC | Acc | Majority |
+|---|---|---|---|---|
+| Sustained /a/ | 99 | 0.95 | 0.87 | 0.56 |
+| Read text | 94 | 0.96 | 0.94 | 0.55 |
+| pa/ta repetition (DDK) | 100 | 0.87 | 0.78 | 0.56 |
+
+Age carries no signal here, so these numbers are not an age artifact. **But the
+features move the wrong way.** PD speakers have *lower* jitter and shimmer and
+*higher* HNR than controls in both vowel and read text (all p < 0.001), the
+opposite of the literature and of MDVR-KCL. The PD read-text recordings are
+also quieter (p < 0.001). The most plausible explanation is that patients and
+controls were recorded in different rooms or at different mic distances, and
+the classifier is learning the room. The pa/ta result is more believable
+(irregular syllable timing in PD, p < 0.001) but the higher syllable *rate*
+in PD is also suspect and may be a peak-detection artifact on noisier audio.
+
+**Verdict:** the best public set for *pipeline development* (all three ritual
+tasks, 16 kHz, matched ages) and the clearest demonstration yet that
+cross-sectional PD-vs-control accuracy from public data is not trustworthy.
+Do not quote its AUC as evidence of disease detection.
+
+## Overall conclusion across all five sets
+
+Every public set that gives a high cross-sectional AUC does so for a reason
+other than Parkinson's: age (Figshare), speaker leakage (UCI), or recording
+environment (Italian). The one set where features behave as the literature
+predicts (MDVR-KCL) has moderate-to-advanced patients and no demographics.
+This is the empirical case for the within-person baseline design: compare each
+user only to themselves, on their own phone, in their own room.

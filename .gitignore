@@ -5,3 +5,5 @@ __pycache__/
 data/raw/**/*.zip
 data/raw/**/*.tar.gz
 data/raw/mdvr_kcl/26-29_09_2017_KCL/
+data/raw/italian_pvs/
+data/raw/italian_pvs.zip

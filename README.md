@@ -6,6 +6,16 @@ using acoustic features the literature links to Parkinson's disease
 
 Framing: screening / monitoring, never diagnosis.
 
+**Start here:** `docs/project-brief.md` (decisions, findings, open questions).
+
+## Setup
+
+```
+python3 -m venv .venv && . .venv/bin/activate
+pip install praat-parselmouth librosa soundfile numpy pandas scipy scikit-learn matplotlib openpyxl
+./data/download.sh   # MDVR-KCL; Italian set needs a free IEEE login, see data/README.md
+```
+
 ## Layout
 
 - `data/raw/`        — downloaded datasets, one subdirectory each (see `data/README.md`)
