@@ -21,11 +21,17 @@ MAX_AMPLITUDE_FACTOR = 1.6
 SILENCE_THRESHOLD_DB = -25.0
 
 
-def extract_features(wav_path: Path) -> dict[str, float]:
-    """Return a flat dict of acoustic features for one recording."""
+def extract_features(wav_path: Path, target_rate_hz: float | None = None) -> dict[str, float]:
+    """Return a flat dict of acoustic features for one recording.
+
+    target_rate_hz resamples first, so datasets recorded at different rates can
+    be compared on equal footing (perturbation measures depend on bandwidth).
+    """
     snd = parselmouth.Sound(str(wav_path))
     if snd.n_channels > 1:
         snd = snd.convert_to_mono()
+    if target_rate_hz and abs(snd.sampling_frequency - target_rate_hz) > 1:
+        snd = snd.resample(target_rate_hz)
     duration_s = snd.get_total_duration()
 
     pitch = snd.to_pitch(pitch_floor=PITCH_FLOOR_HZ, pitch_ceiling=PITCH_CEILING_HZ)

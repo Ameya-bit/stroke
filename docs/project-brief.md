@@ -73,6 +73,30 @@ meta-analysis of speech biomarkers (ebm.bmj.com/content/31/1/46).
 Overall: every high cross-sectional AUC in public data has a non-disease
 explanation. That is the empirical argument for the within-person design.
 
+## 5b. The model (full numbers in `model-results.md`)
+
+Standardized logistic regression on 13 Praat features (mean pitch dropped as a
+sex proxy), L2, C=0.3. Code in `model/pd_model.py`; every prediction comes with
+an exact per-feature breakdown of the log-odds. Evaluated speaker-held-out:
+
+| task_dataset | LOSO AUC | 70/30 ×20 AUC | age-only AUC |
+|---|---|---|---|
+| vowel, Figshare | 0.70 | 0.71 ± 0.08 | 0.87 |
+| vowel, Italian | 0.95 | 0.93 ± 0.06 | 0.40 |
+| read text, Italian | 0.95 | 0.96 ± 0.05 | 0.47 |
+| read text, MDVR-KCL | 0.80 | 0.74 ± 0.11 | n/a |
+
+**Cross-dataset (train on one, test on the other, same task): AUC 0.50–0.52 for
+all four pairs.** The model learns the dataset, not the disease. Only one
+feature, loudness variability, pushes the same direction in all four models.
+Published papers report 88–94% on these sets using splits that leak speakers.
+
+Consequence for the app: the trained model supplies the validation slide and a
+weak prior on feature direction. The drift score must be computed against the
+user's own baseline, with loudness variability, pitch variability and the
+perturbation measures tracked individually rather than collapsed into one
+"PD probability".
+
 ## 6. Daily tasks and what each measures
 
 | Task | Features | Evidence status |
@@ -105,3 +129,5 @@ Things that break biomarkers: singing (pitch is intentional), dramatic reading
 - `analysis/features.py`: the Praat feature extractor the server will reuse.
 - `analysis/01–04_*.py`: per-dataset analyses that produced §5.
 - `docs/dataset-analysis.md`: full numbers and caveats.
+- `model/pd_model.py`, `model/evaluate.py`, `model/artifacts/`: the logistic scorer, its evaluation, saved models per task/dataset.
+- `tests/`: pytest suite for the model (`python -m pytest tests`).
