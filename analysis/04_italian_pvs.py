@@ -1,7 +1,7 @@
 """Italian Parkinson's Voice and Speech (Dimauro & Girardi): the age-matched test.
 
 28 PD, 22 elderly HC, 15 young HC. 16 kHz PCM. Filenames encode task, speaker
-id, birth year and sex: VA1 ACNAGRER 49 F 21032017 0920 (49 -> born 1949). Tasks used here:
+id, birth year and sex: VA1 <code> 49 F 21032017 0920 (49 -> born 1949; code is initials-like). Tasks used here:
   VA = sustained /a/ (2 takes), B = read balanced text (2 takes),
   D1/D2 = 'pa' / 'ta' syllable repetition for 5 s (diadochokinesis).
 Folder names contain participant names and filenames carry birth year and
