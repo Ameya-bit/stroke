@@ -20,6 +20,15 @@ final class LeaderboardStore: ObservableObject {
         entries.filter { $0.templateID == templateID }.sorted { $0.score.total > $1.score.total }
     }
 
+    func entries(inSession sessionID: UUID) -> [ScoreEntry] {
+        entries.filter { $0.sessionID == sessionID }.sorted { $0.date < $1.date }
+    }
+
+    /// Oldest-first attempts of one template, for progress charts.
+    func history(for templateID: String) -> [ScoreEntry] {
+        entries.filter { $0.templateID == templateID }.sorted { $0.date < $1.date }
+    }
+
     /// 1-based rank of `entry` among all entries for its template.
     func rank(of entry: ScoreEntry) -> Int {
         let ranked = entries(for: entry.templateID)

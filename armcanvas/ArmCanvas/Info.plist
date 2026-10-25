@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BACKEND_URL</key>
+	<string>$(BACKEND_URL)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -20,8 +22,15 @@
 	<string>1</string>
 	<key>GOOGLE_API_KEY</key>
 	<string>$(GOOGLE_API_KEY)</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>ArmCanvas uses the camera to track the phone's position so you can draw and exercise in augmented reality.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ArmCanvas talks to a development server on your local network.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>

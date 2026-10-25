@@ -5,22 +5,23 @@ struct CalibrationHUD: View {
     let secondsLeft: Int
 
     var body: some View {
-        VStack(spacing: 12) {
-            TrackingBanner(ar: controller.drawing.ar)
-            Spacer()
-            Text("Reach as far as you can in every direction")
-                .font(.title3.weight(.semibold))
-                .multilineTextAlignment(.center)
-            Text("\(secondsLeft)")
-                .font(.system(size: 64, weight: .bold, design: .rounded))
-                .monospacedDigit()
-            Button("Cancel") { controller.cancelCalibration() }
-                .buttonStyle(.bordered)
-                .tint(.white)
-            Spacer()
+        ZStack {
+            Theme.background.ignoresSafeArea()
+            VStack(spacing: 12) {
+                TrackingBanner(ar: controller.drawing.ar)
+                Spacer()
+                Text("Reach as far as you can in every direction")
+                    .font(.title3.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                Text("\(secondsLeft)")
+                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                Button("Cancel") { controller.cancelCalibration() }
+                    .buttonStyle(.bordered)
+                    .tint(.primary)
+                Spacer()
+            }
+            .padding()
         }
-        .foregroundStyle(.white)
-        .shadow(radius: 3)
-        .padding()
     }
 }

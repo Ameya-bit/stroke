@@ -11,13 +11,14 @@ enum ViewMode: Equatable {
 
 /// Wires the AR session, the stroke recorder and the renderer together.
 final class DrawingSession: ObservableObject {
-    static let defaultColor = UIColor.systemOrange
+    static let defaultColor = Theme.accentUI
 
     let ar = ARSessionManager()
     private let recorder = StrokeRecorder()
     private let renderer: StrokeRenderer
     private let tipMarker: TipMarker
     private var activeColor = DrawingSession.defaultColor
+    private let haptic = UIImpactFeedbackGenerator(style: .medium)
 
     @Published private(set) var isDrawing = false
     @Published private(set) var strokeCount = 0
@@ -41,7 +42,18 @@ final class DrawingSession: ObservableObject {
     }
 
     func toggleViewMode() {
-        viewMode = viewMode == .camera ? .remote : .camera
+        setViewMode(viewMode == .camera ? .remote : .camera)
+    }
+
+    func setViewMode(_ mode: ViewMode) {
+        viewMode = mode
+        if ar.isRunning { ar.run(mode: mode == .camera ? .full : .light) }
+    }
+
+    /// Starts tracking in the mode matching the current view, if not running.
+    func ensureRunning() {
+        guard !ar.isRunning else { return }
+        ar.run(mode: viewMode == .camera ? .full : .light)
     }
 
     // MARK: Drawing
@@ -50,13 +62,18 @@ final class DrawingSession: ObservableObject {
         guard ar.isTrackingNormal, !recorder.isDrawing else { return }
         activeColor = color
         recorder.begin()
+        renderer.beginStroke()
         isDrawing = true
+        haptic.impactOccurred()
     }
 
     func endDrawing() {
+        guard recorder.isDrawing else { return }
         recorder.end()
+        renderer.endStroke()
         isDrawing = false
         strokeCount = recorder.strokeCount
+        haptic.impactOccurred(intensity: 0.6)
     }
 
     func clear() {

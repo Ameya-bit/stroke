@@ -4,10 +4,14 @@ import simd
 /// Movement-units smoothness: prominent speed peaks per meter of path.
 /// A smooth arm movement has one or two; a jerky one has many.
 enum Smoothness {
-    /// ~150ms at 60Hz.
-    static let window = 9
+    /// ~250ms at 60Hz: long enough to flatten pose jitter, short enough to keep hesitations.
+    static let window = 15
     /// A peak only counts if speed rose this fraction of the max above the preceding valley.
-    static let prominence: Float = 0.1
+    static let prominence: Float = 0.15
+    /// Sub-movements last 300ms or more, so a wider window and a higher bar
+    /// count whole motions rather than ripples.
+    static let movementWindow = 21
+    static let movementProminence: Float = 0.3
     static let idealPeaksPerMeter: Float = 2
     static let worstPeaksPerMeter: Float = 12
 
@@ -16,12 +20,22 @@ enum Smoothness {
         guard pathLength > 0.05 else { return worstPeaksPerMeter }
         let speeds = speedProfile(samples)
         let smoothed = movingAverage(speeds, window: window)
-        return Float(countPeaks(smoothed)) / pathLength
+        return Float(countPeaks(smoothed, prominence: prominence)) / pathLength
     }
 
     static func score(peaksPerMeter: Float) -> Float {
         let range = worstPeaksPerMeter - idealPeaksPerMeter
         return min(1, max(0, 1 - (peaksPerMeter - idealPeaksPerMeter) / range))
+    }
+
+    /// Number of distinct sub-movements across all strokes: one per velocity
+    /// peak, so one smooth reach is one unit and a drawing done in pieces
+    /// has many. Every stroke counts at least once.
+    static func movementUnits(strokes: [Stroke]) -> Int {
+        strokes.reduce(0) { count, stroke in
+            let smoothed = movingAverage(speedProfile(stroke.samples), window: movementWindow)
+            return count + countPeaks(smoothed, prominence: movementProminence)
+        }
     }
 
     private static func speedProfile(_ samples: [Sample]) -> [Float] {
@@ -43,24 +57,29 @@ enum Smoothness {
     }
 
     /// Counts maxima that rise at least `prominence * max` above the lowest
-    /// point since the previous counted peak.
-    private static func countPeaks(_ values: [Float]) -> Int {
+    /// point since the previous peak ended, where a peak ends once speed has
+    /// fallen that far below its crest.
+    private static func countPeaks(_ values: [Float], prominence: Float) -> Int {
         guard values.count >= 3, let maxValue = values.max(), maxValue > 0 else { return 1 }
         let threshold = maxValue * prominence
         var peaks = 0
         var valley = values[0]
+        var crest = values[0]
         var climbing = false
-        for i in 1..<values.count {
-            let v = values[i]
-            if v < valley || !climbing {
+        for v in values.dropFirst() {
+            if climbing {
+                crest = max(crest, v)
+                if crest - v >= threshold {
+                    climbing = false
+                    valley = v
+                }
+            } else {
                 valley = min(valley, v)
-            }
-            if !climbing, v - valley >= threshold {
-                climbing = true
-                peaks += 1
-            } else if climbing, v < values[i - 1], values[i - 1] - v >= threshold {
-                climbing = false
-                valley = v
+                if v - valley >= threshold {
+                    climbing = true
+                    crest = v
+                    peaks += 1
+                }
             }
         }
         return max(1, peaks)

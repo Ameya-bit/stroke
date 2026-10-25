@@ -8,7 +8,7 @@ final class TipMarker {
     init(scene: SCNScene) {
         let sphere = SCNSphere(radius: 0.006)
         let material = SCNMaterial()
-        material.diffuse.contents = UIColor.systemYellow
+        material.diffuse.contents = Theme.accentUI
         material.lightingModel = .constant
         sphere.materials = [material]
         node = SCNNode(geometry: sphere)

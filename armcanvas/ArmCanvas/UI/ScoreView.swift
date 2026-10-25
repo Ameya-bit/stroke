@@ -15,7 +15,7 @@ struct ScoreView: View {
 
     var body: some View {
         ZStack {
-            Color(white: 0.08).ignoresSafeArea()
+            Theme.background.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 18) {
                     headline
@@ -27,34 +27,40 @@ struct ScoreView: View {
                 .padding()
             }
         }
-        .foregroundStyle(.white)
     }
 
     private var headline: some View {
         VStack(spacing: 6) {
             Text(report.template.name)
                 .font(.headline)
-                .opacity(0.7)
+                .foregroundStyle(.secondary)
             Text("\(score.total)")
                 .font(.system(size: 88, weight: .bold, design: .rounded))
             Text("#\(report.rank) of \(report.rankedCount) on this drawing")
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(report.rank == 1 ? .yellow : .white)
+                .foregroundStyle(report.rank == 1 ? Theme.accent : .primary)
         }
     }
 
     private var metrics: some View {
-        VStack(spacing: 10) {
+        let expected = report.template.expectedMotions
+        return VStack(spacing: 10) {
             MetricBar(label: "Shape", value: score.shape, detail: String(format: "%.2f", score.procrustesDistance))
-            MetricBar(label: "Size", value: score.size, detail: String(format: "%.0f cm", score.extentMeters * 100))
+            MetricBar(label: "Size", value: score.size, detail: String(format: "%.0f / %.0f cm", score.extentMeters * 100, report.entry.targetExtentMeters * 100))
             MetricBar(label: "Smoothness", value: score.smoothness, detail: String(format: "%.1f mm wobble · %.1f pk/m", score.wobbleMeters * 1000, score.peaksPerMeter))
+            HStack {
+                Text("Motions")
+                Spacer()
+                Text("\(score.motions) · \(expected) expected")
+                    .monospacedDigit()
+                    .foregroundStyle(score.motions > 2 * expected ? Theme.accent : .secondary)
+            }
+            .font(.subheadline)
             Text(String(format: "%.1f s", score.durationSeconds))
                 .font(.caption)
-                .opacity(0.6)
+                .foregroundStyle(.secondary)
         }
-        .padding()
-        .background(Color.white.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .card(padding: 16)
     }
 
     @ViewBuilder
@@ -64,24 +70,22 @@ struct ScoreView: View {
                 .font(.headline)
             switch controller.judgeStatus {
             case .idle:
-                Text("Not requested.").opacity(0.6)
+                Text("Not requested.").foregroundStyle(.secondary)
             case .judging:
-                HStack { ProgressView().tint(.white); Text("Looking at your drawing…") }
+                HStack { ProgressView(); Text("Looking at your drawing…") }
             case .done(let result):
                 Text("Looks like: \(result.guess)  ·  match \(result.match)/10")
                     .font(.subheadline.weight(.semibold))
                 Text(result.feedback)
             case .failed(let message):
-                Text(message).font(.footnote).opacity(0.7)
+                Text(message).font(.footnote).foregroundStyle(.secondary)
                 Button("Retry") { controller.requestJudgement(template: report.template) }
                     .buttonStyle(.bordered)
-                    .tint(.white)
+                    .tint(.primary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color.white.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .card(padding: 16)
     }
 
     private var leaderboard: some View {
@@ -95,23 +99,33 @@ struct ScoreView: View {
                     Text("\(entry.score.total)").monospacedDigit()
                 }
                 .font(entry.id == report.entry.id ? .body.weight(.bold) : .body)
-                .foregroundStyle(entry.id == report.entry.id ? .orange : .white)
+                .foregroundStyle(entry.id == report.entry.id ? Theme.accent : .primary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color.white.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .card(padding: 16)
     }
 
+    @ViewBuilder
     private var buttons: some View {
-        HStack(spacing: 12) {
-            Button("Home") { controller.goHome() }
-                .buttonStyle(.bordered)
-                .tint(.white)
-            Button("Draw again") { controller.startDrawing(report.template) }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
+        if let run = controller.session {
+            HStack(spacing: 12) {
+                Button("End session") { controller.goHome() }
+                    .buttonStyle(.bordered)
+                    .tint(.primary)
+                Button(run.advanced() == nil ? "Finish session" : "Next rep") { controller.advanceSession() }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+            }
+        } else {
+            HStack(spacing: 12) {
+                Button("Home") { controller.goHome() }
+                    .buttonStyle(.bordered)
+                    .tint(.primary)
+                Button("Draw again") { controller.startDrawing(report.template) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+            }
         }
     }
 }
@@ -126,13 +140,13 @@ struct MetricBar: View {
             HStack {
                 Text(label)
                 Spacer()
-                Text(detail).opacity(0.6).monospacedDigit()
+                Text(detail).foregroundStyle(.secondary).monospacedDigit()
             }
             .font(.subheadline)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.15))
-                    Capsule().fill(Color.orange).frame(width: geo.size.width * CGFloat(max(0, min(1, value))))
+                    Capsule().fill(Theme.track)
+                    Capsule().fill(Theme.accent).frame(width: geo.size.width * CGFloat(max(0, min(1, value))))
                 }
             }
             .frame(height: 10)

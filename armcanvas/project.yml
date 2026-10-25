@@ -22,6 +22,10 @@ targets:
         UILaunchScreen: {}
         UIStatusBarHidden: true
         GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+        BACKEND_URL: $(BACKEND_URL)
+        NSLocalNetworkUsageDescription: ArmCanvas talks to a development server on your local network.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ameya.armcanvas

@@ -11,17 +11,24 @@ struct DrawingTemplate: Identifiable, Equatable {
     let works: String
     let instruction: String
     let targetExtentMeters: Float
+    /// How many sub-movements a clean performance takes: 1 for one continuous sweep.
+    let expectedMotions: Int
     let isClosed: Bool
+    /// Free draw: no target shape, no score, the AI just guesses what it is.
+    let isFree: Bool
     let points: [SIMD2<Float>]
 
     init(id: String, name: String, works: String, instruction: String,
-         targetExtentMeters: Float, isClosed: Bool, points: [SIMD2<Float>]) {
+         targetExtentMeters: Float, expectedMotions: Int = 1, isClosed: Bool, isFree: Bool = false,
+         points: [SIMD2<Float>]) {
         self.id = id
         self.name = name
         self.works = works
         self.instruction = instruction
         self.targetExtentMeters = targetExtentMeters
+        self.expectedMotions = expectedMotions
         self.isClosed = isClosed
+        self.isFree = isFree
         // Space points evenly by arc length so they line up with resampled drawings.
         let closedPath = isClosed ? points + [points[0]] : points
         let even = Resample.evenly(closedPath, count: isClosed ? Self.pointCount + 1 : Self.pointCount)
@@ -49,14 +56,14 @@ struct DrawingTemplate: Identifiable, Equatable {
             id: "wallclimb", name: "Wall climb",
             works: "Shoulder flexion",
             instruction: "Draw straight up as high as you can, then back down.",
-            targetExtentMeters: 0.6, isClosed: false,
+            targetExtentMeters: 0.6, expectedMotions: 2, isClosed: false,
             points: Shapes.outAndBack(direction: SIMD2<Float>(0, 1))
         ),
         DrawingTemplate(
             id: "sweep", name: "Side sweep",
             works: "Abduction + adduction",
             instruction: "Sweep your arm out to the side and back across.",
-            targetExtentMeters: 0.7, isClosed: false,
+            targetExtentMeters: 0.7, expectedMotions: 2, isClosed: false,
             points: Shapes.outAndBack(direction: SIMD2<Float>(1, 0))
         ),
         DrawingTemplate(
@@ -70,13 +77,21 @@ struct DrawingTemplate: Identifiable, Equatable {
             id: "star", name: "Star",
             works: "Fun level",
             instruction: "Draw a five-point star in one stroke.",
-            targetExtentMeters: 0.4, isClosed: true,
+            targetExtentMeters: 0.4, expectedMotions: 5, isClosed: true,
             points: Shapes.star()
         ),
     ]
 
+    static let free = DrawingTemplate(
+        id: "free", name: "Free draw",
+        works: "Anything you like",
+        instruction: "Draw whatever you want. The AI will guess what it is.",
+        targetExtentMeters: 0.5, isClosed: false, isFree: true,
+        points: Shapes.scribble()
+    )
+
     static func named(_ id: String) -> DrawingTemplate? {
-        all.first { $0.id == id }
+        id == free.id ? free : all.first { $0.id == id }
     }
 }
 
@@ -110,6 +125,14 @@ enum Shapes {
             let angle = t * 2 * .pi * 2.5
             let r = 0.1 + 0.9 * t
             return SIMD2<Float>(r * cos(angle), r * sin(angle))
+        }
+    }
+
+    /// Glyph only; never scored against.
+    static func scribble() -> [SIMD2<Float>] {
+        (0..<n).map { i in
+            let t = Float(i) / Float(n - 1)
+            return SIMD2<Float>(-1 + 2 * t, 0.6 * sin(t * 4 * .pi) * (1 - 0.3 * t))
         }
     }
 

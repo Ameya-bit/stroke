@@ -9,6 +9,10 @@ final class MeshOcclusion: NSObject, ARSCNViewDelegate {
         ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
     }
 
+    /// Rebuilding a mesh anchor's geometry is the expensive part; cap it.
+    static let minUpdateInterval: TimeInterval = 0.75
+    private var lastUpdate: [UUID: TimeInterval] = [:]
+
     private let material: SCNMaterial = {
         let material = SCNMaterial()
         material.colorBufferWriteMask = []
@@ -26,7 +30,14 @@ final class MeshOcclusion: NSObject, ARSCNViewDelegate {
 
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         guard let meshAnchor = anchor as? ARMeshAnchor else { return }
+        let now = CACurrentMediaTime()
+        if let last = lastUpdate[anchor.identifier], now - last < Self.minUpdateInterval { return }
+        lastUpdate[anchor.identifier] = now
         node.geometry = geometry(from: meshAnchor.geometry)
+    }
+
+    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+        lastUpdate[anchor.identifier] = nil
     }
 
     private func geometry(from mesh: ARMeshGeometry) -> SCNGeometry {

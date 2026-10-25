@@ -1,9 +1,12 @@
 import SceneKit
 import simd
 
-/// Draws strokes as chains of thin cylinders in the AR scene.
+/// Draws strokes as chains of thin cylinders. Each stroke is built under its
+/// own node and flattened into a single geometry when it ends, so a finished
+/// drawing costs one draw call per stroke instead of one per centimetre.
 final class StrokeRenderer {
     private let root = SCNNode()
+    private var current: SCNNode?
     private let radius: CGFloat = 0.004
     private var materials: [UIColor: SCNMaterial] = [:]
 
@@ -11,27 +14,45 @@ final class StrokeRenderer {
         scene.rootNode.addChildNode(root)
     }
 
+    func beginStroke() {
+        let node = SCNNode()
+        root.addChildNode(node)
+        current = node
+    }
+
     func addSegment(from a: SIMD3<Float>, to b: SIMD3<Float>, color: UIColor) {
+        if current == nil { beginStroke() }
+        guard let current else { return }
         let delta = b - a
         let length = simd_length(delta)
         guard length > 0.0005, length.isFinite else { return }
         let material = self.material(for: color)
 
         let cylinder = SCNCylinder(radius: radius, height: CGFloat(length))
+        cylinder.radialSegmentCount = 8
         cylinder.materials = [material]
         let segment = SCNNode(geometry: cylinder)
         segment.simdPosition = (a + b) * 0.5
         segment.simdOrientation = Self.orientation(alongUnit: delta / length)
-        root.addChildNode(segment)
+        current.addChildNode(segment)
 
         let sphere = SCNSphere(radius: radius)
+        sphere.segmentCount = 8
         sphere.materials = [material]
         let joint = SCNNode(geometry: sphere)
         joint.simdPosition = b
-        root.addChildNode(joint)
+        current.addChildNode(joint)
+    }
+
+    func endStroke() {
+        guard let current else { return }
+        let flat = current.flattenedClone()
+        root.replaceChildNode(current, with: flat)
+        self.current = nil
     }
 
     func clear() {
+        current = nil
         root.childNodes.forEach { $0.removeFromParentNode() }
     }
 

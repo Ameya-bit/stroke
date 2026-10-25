@@ -5,10 +5,11 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
+            Theme.background.ignoresSafeArea()
             SceneLayer(drawing: controller.drawing)
             content
         }
-        .onAppear { controller.drawing.ar.start() }
+        .preferredColorScheme(.light)
         .onDisappear { controller.drawing.ar.pause() }
     }
 
@@ -21,6 +22,8 @@ struct RootView: View {
             DrawHUD(controller: controller, template: template)
         case .scored(let report):
             ScoreView(controller: controller, report: report)
+        case .sessionSummary(let summary):
+            SessionSummaryView(controller: controller, summary: summary)
         case .calibrating(let secondsLeft):
             CalibrationHUD(controller: controller, secondsLeft: secondsLeft)
         case .calibrated(let envelope):
@@ -33,8 +36,8 @@ struct RootView: View {
     }
 }
 
-/// Keeps the AR view alive (tracking needs the camera) and covers it with
-/// a dark remote-control surface while in `.remote` mode.
+/// Hosts the AR view. It is hidden by the session manager in remote mode
+/// and covered by the ground colour while not drawing.
 private struct SceneLayer: View {
     @ObservedObject var drawing: DrawingSession
 
@@ -43,8 +46,7 @@ private struct SceneLayer: View {
             ARViewContainer(sceneView: drawing.ar.sceneView)
                 .ignoresSafeArea()
             if drawing.viewMode == .remote {
-                Color(white: 0.08)
-                    .ignoresSafeArea()
+                Theme.background.ignoresSafeArea()
             }
         }
     }

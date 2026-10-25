@@ -11,6 +11,24 @@ struct DrawingScore: Codable, Equatable {
     let procrustesDistance: Float
     let peaksPerMeter: Float
     let wobbleMeters: Float
+    /// Sub-movements used to make the drawing. 0 for entries saved before this existed.
+    let motions: Int
+}
+
+extension DrawingScore {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        shape = try c.decode(Float.self, forKey: .shape)
+        size = try c.decode(Float.self, forKey: .size)
+        smoothness = try c.decode(Float.self, forKey: .smoothness)
+        total = try c.decode(Int.self, forKey: .total)
+        extentMeters = try c.decode(Float.self, forKey: .extentMeters)
+        durationSeconds = try c.decode(Float.self, forKey: .durationSeconds)
+        procrustesDistance = try c.decode(Float.self, forKey: .procrustesDistance)
+        peaksPerMeter = try c.decode(Float.self, forKey: .peaksPerMeter)
+        wobbleMeters = try c.decode(Float.self, forKey: .wobbleMeters)
+        motions = try c.decodeIfPresent(Int.self, forKey: .motions) ?? 0
+    }
 }
 
 enum DrawingScorer {
@@ -23,7 +41,8 @@ enum DrawingScorer {
     /// Distance above perfect at which the shape score reaches zero.
     static let shapeRange: Float = 0.45
 
-    static func score(strokes: [Stroke], template: DrawingTemplate) -> DrawingScore? {
+    static func score(strokes: [Stroke], template: DrawingTemplate, targetExtentMeters: Float? = nil) -> DrawingScore? {
+        let targetExtent = targetExtentMeters ?? template.targetExtentMeters
         let samples = strokes.flatMap(\.samples)
         guard samples.count >= 4 else { return nil }
         let positions = samples.map(\.position)
@@ -34,7 +53,7 @@ enum DrawingScorer {
         let shape = min(1, max(0, 1 - (distance - shapePerfectDistance) / shapeRange))
 
         let extent = Self.extent(projection.points2D)
-        let size = min(1, extent / template.targetExtentMeters)
+        let size = min(1, extent / targetExtent)
 
         let peaks = Smoothness.peaksPerMeter(samples: samples)
         let wobble = Wobble.amplitude(points2D: projection.points2D)
@@ -48,7 +67,8 @@ enum DrawingScorer {
             shape: shape, size: size, smoothness: smoothness,
             total: Int((weighted * 100).rounded()),
             extentMeters: extent, durationSeconds: duration,
-            procrustesDistance: distance, peaksPerMeter: peaks, wobbleMeters: wobble
+            procrustesDistance: distance, peaksPerMeter: peaks, wobbleMeters: wobble,
+            motions: Smoothness.movementUnits(strokes: strokes)
         )
     }
 

@@ -18,10 +18,10 @@ struct EnvelopeCard: View {
                 .foregroundStyle(.secondary)
             Button("Done", action: onDone)
                 .buttonStyle(.borderedProminent)
+                .tint(Theme.accent)
         }
-        .padding()
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .frame(maxWidth: .infinity)
+        .card(padding: 16)
     }
 
     private func cell(_ label: String, _ meters: Float, unit: String = "cm") -> some View {
