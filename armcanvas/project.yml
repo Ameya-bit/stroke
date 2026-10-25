@@ -1,0 +1,33 @@
+name: ArmCanvas
+options:
+  bundleIdPrefix: com.ameya
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Config/Secrets.xcconfig
+  Release: Config/Secrets.xcconfig
+targets:
+  ArmCanvas:
+    type: application
+    platform: iOS
+    sources:
+      - ArmCanvas
+    info:
+      path: ArmCanvas/Info.plist
+      properties:
+        NSCameraUsageDescription: ArmCanvas uses the camera to track the phone's position so you can draw and exercise in augmented reality.
+        UIRequiredDeviceCapabilities: [arkit]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UILaunchScreen: {}
+        UIStatusBarHidden: true
+        GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ameya.armcanvas
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: $(DEVELOPMENT_TEAM)
+        INFOPLIST_KEY_UIStatusBarHidden: YES
+        INFOPLIST_KEY_UIViewControllerBasedStatusBarAppearance: NO
