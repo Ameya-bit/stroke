@@ -46,3 +46,12 @@ def test_judge_without_key_is_502(monkeypatch):
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     body = {"template_name": "Big circle", "instruction": "x", "images_png_b64": ["aGk="]}
     assert client.post("/judge", json=body).status_code == 502
+
+
+def test_oversized_inputs_are_rejected():
+    many = {"templates": [{"template_id": f"t{i}", "default_target_m": 0.5} for i in range(13)]}
+    assert client.post("/plan", json=many).status_code == 422
+    big_name = {"id": "c", "player": "x" * 41, "templateID": "circle", "total": 50, "extentMeters": 0.5, "date": "2026-10-24T20:00:00Z"}
+    assert client.post("/scores", json=big_name).status_code == 422
+    huge_image = {"template_name": "Big circle", "instruction": "x", "images_png_b64": ["A" * 2_000_001]}
+    assert client.post("/judge", json=huge_image).status_code == 422
